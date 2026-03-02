@@ -112,6 +112,7 @@ struct settings {
         struct notification_colors colors_crit;
         char *format;
         gint64 timeouts[3];
+        gint64 action_history_timeout;
         char *icons[3];
         unsigned int transparency;
         char *title;

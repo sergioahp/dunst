@@ -37,6 +37,17 @@ int next_notification_id = 1;
 static bool queues_stack_duplicate(struct notification *n);
 static bool queues_stack_by_tag(struct notification *n);
 
+static void queues_prune_action_timeouts(gint64 now)
+{
+        GQueue *allqueues[] = { displayed, waiting, history };
+        for (size_t i = 0; i < sizeof(allqueues)/sizeof(GQueue*); i++) {
+                for (GList *iter = g_queue_peek_head_link(allqueues[i]); iter; iter = iter->next) {
+                        struct notification *n = iter->data;
+                        notification_maybe_expire_actions(n, now);
+                }
+        }
+}
+
 /* see queues.h */
 void queues_init(void)
 {
@@ -371,8 +382,15 @@ void queues_notification_close_id(gint id, enum reason reason)
         }
 
         if (target) {
+                gint64 now = time_monotonic_now();
+                bool delay_close = false;
+                if (!target->redisplayed && reason == REASON_USER)
+                        delay_close = notification_handle_close(target, reason, now);
+                else
+                        notification_handle_close(target, reason, now);
+
                 //Don't notify clients if notification was pulled from history
-                if (!target->redisplayed)
+                if (!target->redisplayed && !delay_close)
                         signal_notification_closed(target, reason);
                 queues_history_push(target);
         }
@@ -454,6 +472,7 @@ void queues_history_push(struct notification *n)
                 guint maxlen = settings.history_length;
                 if (settings.history_length > 0 && history->length >= maxlen) {
                         struct notification *to_free = g_queue_pop_head(history);
+                        notification_emit_close_if_pending(to_free);
                         notification_unref(to_free);
                 }
 
@@ -503,6 +522,8 @@ bool queues_history_remove_by_id(gint id) {
 void queues_update(struct dunst_status status, gint64 time)
 {
         GList *iter, *nextiter;
+
+        queues_prune_action_timeouts(time);
 
         /* Move back all notifications, which aren't eligible to get shown anymore
          * Will move the notifications back to waiting, if dunst isn't running or fullscreen
@@ -651,6 +672,21 @@ gint64 queues_get_next_datachange(gint64 time)
                         }
                         else
                                 wakeup_time = MIN(wakeup_time, n->timestamp + settings.show_age_threshold);
+                }
+        }
+
+        GQueue *actionqueues[] = { displayed, waiting, history };
+        for (size_t i = 0; i < sizeof(actionqueues)/sizeof(GQueue*); i++) {
+                for (GList *iter = g_queue_peek_head_link(actionqueues[i]); iter; iter = iter->next) {
+                        struct notification *n = iter->data;
+
+                        if (n->actions_until <= 0 || g_hash_table_size(n->actions) == 0)
+                                continue;
+
+                        if (n->actions_until > time)
+                                wakeup_time = MIN(wakeup_time, n->actions_until);
+                        else
+                                return time;
                 }
         }
 

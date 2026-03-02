@@ -19,3 +19,8 @@ vgcore.*
 /dunst.systemd.service
 /org.knopwob.dunst.service
 /test/test
+
+# Local Nix build outputs / local test config
+/result
+/result-man
+/dunstrc.local

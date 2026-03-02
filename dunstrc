@@ -251,6 +251,10 @@
     # Maximum amount of notifications kept in history
     history_length = 20
 
+    # How long actions stay valid after the notification is closed.
+    # Supports time suffixes.
+    action_history_timeout = 0
+
     ### Misc/Advanced ###
 
     # dmenu path.

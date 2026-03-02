@@ -146,14 +146,9 @@ static gboolean run(void *data)
         }
         next_timeout_id = 0;
 
-        if (!queues_length_displayed()) {
+        bool has_displayed = queues_length_displayed() > 0;
+        if (!has_displayed)
                 output->win_hide(win);
-                return G_SOURCE_REMOVE;
-        }
-
-        // Call draw before showing the window to avoid flickering
-        draw();
-        output->win_show(win);
 
         gint64 timeout_at = queues_get_next_datachange(now);
         if (timeout_at != -1) {
@@ -168,6 +163,13 @@ static gboolean run(void *data)
 
                 next_timeout_id = g_timeout_add(sleep/1000, run, NULL);
         }
+
+        if (!has_displayed)
+                return G_SOURCE_REMOVE;
+
+        // Call draw before showing the window to avoid flickering
+        draw();
+        output->win_show(win);
 
         /* If the execution got triggered by g_timeout_add,
          * we have to remove the timeout (which is actually a

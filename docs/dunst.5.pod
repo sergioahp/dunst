@@ -527,6 +527,12 @@ Maximum number of notifications that will be kept in history. After that limit
 is reached, older notifications will be deleted once a new one arrives. See
 HISTORY.
 
+=item B<action_history_timeout> (default: 0)
+
+How long actions stay valid after the notification is closed. Supports the same
+time suffixes as other timeout values. Set to 0 to drop actions immediately
+(the default behaviour).
+
 =item B<dmenu> (default: "/usr/bin/dmenu -p dunst")
 
 The command that will be run when opening the context menu. Should be either
@@ -727,8 +733,10 @@ Dunst saves a number of notifications (specified by B<history_length>) in memory
 These notifications can be recalled (i.e. redisplayed) by calling
 B<dunstctl history> (see dunstctl(1)). Whether these notifications will time out
 like if they have been just send depends on the value of the B<sticky_history>
-setting. Actions are invalidated once the notification is closed, so you cannot
-execute that action when you bring back a notification from history.
+setting. Actions are invalidated once the notification is closed unless
+B<action_history_timeout> is set to a value greater than 0, so with the default
+configuration you cannot execute an action when you bring back a notification
+from history.
 
 Past notifications are redisplayed in a first-in-last-out order, meaning that
 pressing the history key once will bring up the most recent notification that

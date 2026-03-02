@@ -1042,6 +1042,16 @@ static const struct setting allowed_settings[] = {
                 .parser_data = NULL,
         },
         {
+                .name = "action_history_timeout",
+                .section = "global",
+                .description = "How long actions stay valid after the notification is closed",
+                .type = TYPE_CUSTOM,
+                .default_value = "0",
+                .value = &settings.action_history_timeout,
+                .parser = string_parse_time_nonneg,
+                .parser_data = NULL,
+        },
+        {
                 .name = "show_indicators",
                 .section = "global",
                 .description = "Show indicators for actions \"(A)\" and URLs \"(U)\"",

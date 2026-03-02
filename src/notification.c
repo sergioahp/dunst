@@ -460,6 +460,9 @@ struct notification *notification_create(void)
         n->urgency = URG_NORM;
         n->timeout = -1;
         n->dbus_timeout = -1;
+        n->actions_until = 0;
+        n->close_signal_pending = false;
+        n->close_signal_reason = REASON_UNDEF;
 
         n->transient = false;
         n->progress = -1;
@@ -773,14 +776,28 @@ void notification_do_action(struct notification *n)
 {
         assert(n->default_action_name);
 
+        notification_maybe_expire_actions(n, time_monotonic_now());
+
         if (g_hash_table_size(n->actions)) {
                 if (g_hash_table_contains(n->actions, n->default_action_name)) {
                         signal_action_invoked(n, n->default_action_name);
+                        if (n->close_signal_pending)
+                                n->close_signal_pending = false;
+                        if (n->dbus_valid) {
+                                signal_notification_closed(n, REASON_USER);
+                                n->dbus_valid = false;
+                        }
                         return;
                 }
                 if (strcmp(n->default_action_name, "default") == 0 && g_hash_table_size(n->actions) == 1) {
                         GList *keys = g_hash_table_get_keys(n->actions);
                         signal_action_invoked(n, keys->data);
+                        if (n->close_signal_pending)
+                                n->close_signal_pending = false;
+                        if (n->dbus_valid) {
+                                signal_notification_closed(n, REASON_USER);
+                                n->dbus_valid = false;
+                        }
                         g_list_free(keys);
                         return;
                 }
@@ -817,6 +834,56 @@ void notification_open_context_menu(struct notification *n)
 
 void notification_invalidate_actions(struct notification *n) {
         g_hash_table_remove_all(n->actions);
+        n->actions_until = 0;
+        n->dbus_valid = false;
+}
+
+void notification_emit_close_if_pending(struct notification *n)
+{
+        if (!n || !n->close_signal_pending)
+                return;
+
+        n->close_signal_pending = false;
+        signal_notification_closed(n, n->close_signal_reason);
+        n->dbus_valid = false;
+}
+
+bool notification_handle_close(struct notification *n, int reason, gint64 now)
+{
+        if (!n || g_hash_table_size(n->actions) == 0)
+                return false;
+
+        if (settings.action_history_timeout == 0) {
+                notification_invalidate_actions(n);
+                return false;
+        }
+
+        if (settings.action_history_timeout < 0) {
+                notification_invalidate_actions(n);
+                return false;
+        }
+
+        n->actions_until = now + settings.action_history_timeout;
+        n->close_signal_pending = true;
+        n->close_signal_reason = reason;
+        return true;
+}
+
+bool notification_maybe_expire_actions(struct notification *n, gint64 now)
+{
+        if (!n || g_hash_table_size(n->actions) == 0)
+                return false;
+
+        if (n->actions_until == 0)
+                return false;
+
+        if (now < n->actions_until)
+                return false;
+
+        notification_invalidate_actions(n);
+        notification_update_text_to_render(n);
+        notification_emit_close_if_pending(n);
+        return true;
 }
 
 void notification_keep_original(struct notification *n)

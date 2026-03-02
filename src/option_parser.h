@@ -17,6 +17,7 @@ int string_parse_gradient(const char *s, struct gradient **ret);
 int string_parse_bool(const void *data, const char *s, void *ret);
 int string_parse_corners(const void *data, const char *s, void *ret);
 int string_parse_maybe_int(const void *data, const char *s, void *ret);
+int string_parse_time_nonneg(const void *data, const char *s, void *ret);
 
 void set_defaults(void);
 void save_settings(struct ini *ini);

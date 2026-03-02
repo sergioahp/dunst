@@ -290,6 +290,19 @@ int string_parse_maybe_int(const void *data, const char *s, void *ret)
         return true;
 }
 
+int string_parse_time_nonneg(const void *data, const char *s, void *ret)
+{
+        (void)data;
+        errno = 0;
+        gint64 tmp_time = string_to_time(s);
+        if (errno != 0)
+                return false;
+        if (tmp_time < 0)
+                return false;
+        *(gint64*)ret = tmp_time;
+        return true;
+}
+
 int get_setting_id(const char *key, const char *section) {
         int error_code = 0;
         int partial_match_id = -1;

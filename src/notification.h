@@ -79,6 +79,9 @@ struct notification {
         gint64 timestamp;  /**< arrival time (in milliseconds) */
         gint64 timeout;    /**< time to display (in milliseconds) */
         gint64 dbus_timeout; /**< time to display (in milliseconds) (set by dbus) */
+        gint64 actions_until; /**< absolute time when actions are invalidated (negative to keep indefinitely, 0 unset) */
+        bool close_signal_pending; /**< whether to delay NotificationClosed until actions expire */
+        int close_signal_reason; /**< reason to use when emitting delayed NotificationClosed */
         int locked;     /**< If non-zero the notification is locked **/
         PangoAlignment progress_bar_alignment; /**< Horizontal alignment of the progress bar **/
 
@@ -262,6 +265,9 @@ void notification_open_context_menu(struct notification *n);
  * for them.
  */
 void notification_invalidate_actions(struct notification *n);
+bool notification_handle_close(struct notification *n, int reason, gint64 now);
+bool notification_maybe_expire_actions(struct notification *n, gint64 now);
+void notification_emit_close_if_pending(struct notification *n);
 
 const char *notification_urgency_to_string(const enum urgency urgency);
 

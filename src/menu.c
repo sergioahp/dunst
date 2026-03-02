@@ -198,6 +198,7 @@ void invoke_action(const char *action)
                           iter;
                           iter = iter->next) {
                 struct notification *n = iter->data;
+                notification_maybe_expire_actions(n, time_monotonic_now());
                 if (n->id != id)
                         continue;
 
@@ -209,6 +210,12 @@ void invoke_action(const char *action)
 
         if (invoked && action_key) {
                 signal_action_invoked(invoked, action_key);
+                if (invoked->close_signal_pending)
+                        invoked->close_signal_pending = false;
+                if (invoked->dbus_valid) {
+                        signal_notification_closed(invoked, REASON_USER);
+                        invoked->dbus_valid = false;
+                }
         }
 
         g_free(action_key);

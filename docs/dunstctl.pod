@@ -14,7 +14,8 @@ dunstctl COMMAND [PARAMETER]
 
 Performs the default action or, if not available, opens the context menu of the
 notification at the given position (starting count at the top, first
-notification being 0).
+notification being 0). Actions remain invokable for closed notifications while
+B<action_history_timeout> permits it.
 
 =item B<close> [ID]
 
