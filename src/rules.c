@@ -1,4 +1,10 @@
-/* copyright 2013 Sascha Kruse and contributors (see LICENSE for licensing information) */
+/* SPDX-License-Identifier: BSD-3-Clause */
+/**
+ * @file
+ * @copyright Copyright 2013-2014 Sascha Kruse
+ * @copyright Copyright 2014-2026 Dunst contributors
+ * @license BSD-3-Clause
+ */
 
 #include "rules.h"
 
@@ -204,7 +210,8 @@ void rule_apply_all(struct notification *n)
         }
 }
 
-bool rule_apply_special_filters(struct rule *r, const char *name) {
+bool rule_apply_special_filters(struct rule *r, const char *name)
+{
         if (is_deprecated_section(name)) // shouldn't happen, but just in case
                 return false;
 
@@ -273,16 +280,35 @@ void rule_free(struct rule *r)
 
 static inline bool rule_field_matches_string(const char *value, const char *pattern)
 {
-        if (settings.enable_regex) {
-                if (!pattern) {
-                        return true;
-                }
-                if (!value) {
+        // Always match empty pattern
+        if (STR_EMPTY(pattern))
+                return true;
+
+        // Never match null value
+        if (!value)
+                return false;
+
+        // Use GLib wrapper for PCRE
+        if (settings.enable_pcre) {
+                GError *error = NULL;
+
+                // TODO: When caching regex use G_REGEX_OPTIMIZE
+                GRegex *regex = g_regex_new(pattern, 0, 0, &error);
+                if (error) {
+                        LOG_W("Invalid PCRE Regex '%s': %s", pattern, error->message);
+                        g_error_free(error);
                         return false;
                 }
-                regex_t     regex;
 
-                // TODO compile each regex only once
+                bool matched = g_regex_match(regex, value, 0, NULL);
+                g_regex_unref(regex);
+                return matched;
+        }
+
+        if (settings.enable_regex) {
+                regex_t regex;
+
+                // TODO: Compile each regex only once
                 int err = regcomp(&regex, pattern, REG_NEWLINE | REG_EXTENDED | REG_NOSUB);
                 if (err) {
                         size_t err_size = regerror(err, &regex, NULL, 0);
@@ -301,9 +327,10 @@ static inline bool rule_field_matches_string(const char *value, const char *patt
                 }
                 regfree(&regex);
                 return false;
-        } else {
-                return !pattern || (value && !fnmatch(pattern, value, 0));
         }
+
+        // Fallback to fnmatch if no regex is enabled
+        return !fnmatch(pattern, value, 0);
 }
 
 /*

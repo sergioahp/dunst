@@ -1,12 +1,20 @@
+/* SPDX-License-Identifier: BSD-3-Clause */
+/**
+ * @file
+ * @copyright Copyright 2021-2026 Dunst contributors
+ * @license BSD-3-Clause
+ */
+
 #define _POSIX_C_SOURCE 200112L
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
 #include "protocols/wlr-foreign-toplevel-management-unstable-v1-client-header.h"
-/* #include "protocols/wlr-foreign-toplevel-management-unstable-v1.h" */
 
 #include "foreign_toplevel.h"
 #include "../dunst.h"
+#include "../log.h"
 #include "wl_output.h"
 #include "wl.h"
 
@@ -30,8 +38,18 @@ static void toplevel_handle_output_enter(void *data,
 {
         (void)zwlr_toplevel;
 
+        if (!wl_output) {
+                LOG_D("Ignoring NULL toplevel output\n");
+                return;
+        }
+
         struct toplevel_v1 *toplevel = data;
-        struct toplevel_output *toplevel_output = calloc(1, sizeof(struct toplevel_output));
+        struct toplevel_output *toplevel_output = g_malloc0(sizeof(struct toplevel_output));
+        if (!toplevel_output) {
+                LOG_W("Failed to allocate memory for toplevel output");
+                return;
+        }
+
         struct dunst_output *dunst_output = wl_output_get_user_data(wl_output);
         toplevel_output->dunst_output = dunst_output;
 
@@ -44,9 +62,14 @@ static void toplevel_handle_output_leave(void *data,
 {
         (void)zwlr_toplevel;
 
-        struct toplevel_v1 *toplevel = data;
+        if (!wl_output) {
+                LOG_D("Ignoring NULL toplevel output\n");
+                return;
+        }
 
+        struct toplevel_v1 *toplevel = data;
         struct dunst_output *output = wl_output_get_user_data(wl_output);
+
         struct toplevel_output *pos, *tmp;
         wl_list_for_each_safe(pos, tmp, &toplevel->output_list, link){
                 if (pos->dunst_output->name == output->name) {
@@ -99,11 +122,13 @@ static void toplevel_handle_closed(void *data,
         struct toplevel_v1 *toplevel = data;
 
         wl_list_remove(&toplevel->link);
+
         struct toplevel_output *pos, *tmp;
-        wl_list_for_each_safe(pos, tmp, &toplevel->output_list, link){
-                free(pos);
+        wl_list_for_each_safe(pos, tmp, &toplevel->output_list, link) {
+                g_free(pos);
         }
-        free(toplevel);
+
+        g_free(toplevel);
         zwlr_foreign_toplevel_handle_v1_destroy(zwlr_toplevel);
 }
 
@@ -142,9 +167,9 @@ static void toplevel_manager_handle_toplevel(void *data,
         (void)data;
         (void)toplevel_manager;
 
-        struct toplevel_v1 *toplevel = calloc(1, sizeof(struct toplevel_v1));
+        struct toplevel_v1 *toplevel = g_malloc0(sizeof(struct toplevel_v1));
         if (!toplevel) {
-                fprintf(stderr, "Failed to allocate memory for toplevel\n");
+                LOG_W("Failed to allocate memory for toplevel");
                 return;
         }
 

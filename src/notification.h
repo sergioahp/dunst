@@ -1,4 +1,13 @@
-/* copyright 2013 Sascha Kruse and contributors (see LICENSE for licensing information) */
+/* SPDX-License-Identifier: BSD-3-Clause */
+/**
+ * @file
+ * @ingroup notify
+ * @brief Notification type definitions
+ * @copyright Copyright 2013-2014 Sascha Kruse
+ * @copyright Copyright 2014-2026 Dunst contributors
+ * @license BSD-3-Clause
+ */
+
 #ifndef DUNST_NOTIFICATION_H
 #define DUNST_NOTIFICATION_H
 
@@ -24,6 +33,7 @@ enum behavior_fullscreen {
         FS_DELAY,     //!< Delay the notification until leaving fullscreen mode
         FS_PUSHBACK,  //!< When entering fullscreen mode, push the notification back to waiting
         FS_SHOW,      //!< Show the message when in fullscreen mode
+        FS_SUPPRESS,  //!< Never show the notification when in fullscreen mode (but record in history)
 };
 
 /// Representing the urgencies according to the notification spec
@@ -127,7 +137,7 @@ struct notification {
  * The reference counter is set to 1.
  *
  * This function is guaranteed to return a valid pointer.
- * @returns The generated notification
+ * @return The generated notification
  */
 struct notification *notification_create(void);
 
@@ -176,7 +186,7 @@ struct notification *notification_lock(struct notification *n);
 struct notification *notification_unlock(struct notification *n);
 
 /**
- * Transfer the image surface of \p from to \p to. The image surface is
+ * Transfer the image surface of @p from to @p to. The image surface is
  * transfered only if the icon names match. When the icon is transferred, it is
  * removed from the old notification to make sure it's not freed twice.
  *

@@ -1,6 +1,16 @@
-/* copyright 2013 Sascha Kruse and contributors (see LICENSE for licensing information) */
+/* SPDX-License-Identifier: BSD-3-Clause */
+/**
+ * @file
+ * @ingroup config
+ * @brief List of all the valid settings and values
+ * @copyright Copyright 2013-2014 Sascha Kruse
+ * @copyright Copyright 2014-2026 Dunst contributors
+ * @license BSD-3-Clause
+ */
+
 #ifndef DUNST_SETTING_DATA_H
 #define DUNST_SETTING_DATA_H
+
 #include <stddef.h>
 #include <pango/pango-layout.h>
 
@@ -275,6 +285,7 @@ static struct string_to_enum_def follow_mode_enum_data[] = {
 };
 
 static const struct string_to_enum_def fullscreen_enum_data[] = {
+        {"suppress", FS_SUPPRESS },
         {"show",     FS_SHOW },
         {"delay",    FS_DELAY },
         {"pushback", FS_PUSHBACK },
@@ -589,7 +600,7 @@ static const struct setting allowed_settings[] = {
         {
                 .name = "fullscreen",
                 .section = "*",
-                .description = "This attribute specifies how notifications are handled if a fullscreen window is focused. One of show, delay, or pushback.",
+                .description = "This attribute specifies how notifications are handled if a fullscreen window is focused. One of show, delay, suppress or pushback.",
                 .type = TYPE_CUSTOM,
                 .default_value = "show",
                 .value = NULL,
@@ -1241,6 +1252,16 @@ static const struct setting allowed_settings[] = {
                 .parser = NULL,
                 .parser_data = NULL,
         },
+        {
+                .name = "pause_on_mouse_over",
+                .section = "experimental",
+                .description = "Pause notification timeout when mouse is over the notification window. Only works on Wayland.",
+                .type = TYPE_CUSTOM,
+                .default_value = "false",
+                .value = &settings.pause_on_mouse_over,
+                .parser = string_parse_bool,
+                .parser_data = boolean_enum_data,
+        },
         // manual extractions below
         {
                 .name = "follow",
@@ -1360,6 +1381,16 @@ static const struct setting allowed_settings[] = {
                 .type = TYPE_CUSTOM,
                 .default_value = "false",
                 .value = &settings.enable_regex,
+                .parser = string_parse_bool,
+                .parser_data = boolean_enum_data,
+        },
+        {
+                .name = "enable_pcre_regex",
+                .section = "experimental",
+                .description = "Use PCRE regex for filtering rules (overrides enable_posix_regex)",
+                .type = TYPE_CUSTOM,
+                .default_value = "false",
+                .value = &settings.enable_pcre,
                 .parser = string_parse_bool,
                 .parser_data = boolean_enum_data,
         },

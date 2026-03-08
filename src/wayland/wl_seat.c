@@ -1,6 +1,11 @@
-#define _POSIX_C_SOURCE 200112L
-#include "wl_seat.h"
+/* SPDX-License-Identifier: BSD-3-Clause */
+/**
+ * @file
+ * @copyright Copyright 2024-2026 Dunst contributors
+ * @license BSD-3-Clause
+ */
 
+#define _POSIX_C_SOURCE 200112L
 #include <linux/input-event-codes.h>
 
 #include "protocols/idle.h"
@@ -14,9 +19,11 @@
 #include "protocols/ext-idle-notify-v1.h"
 #endif
 
+#include "../dunst.h"
 #include "../input.h"
 #include "../log.h"
 #include "../settings.h"
+#include "wl_seat.h"
 #include "wl_ctx.h"
 
 static void touch_handle_motion(void *data, struct wl_touch *wl_touch,
@@ -71,6 +78,11 @@ static const struct wl_touch_listener touch_listener = {
 
 static void pointer_handle_enter(void *data, struct wl_pointer *wl_pointer,
                 uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y) {
+        if (settings.pause_on_mouse_over) {
+                dunst_status(S_MOUSE_OVER, true);
+                wake_up();
+        }
+
         // Change the mouse cursor to "left_ptr"
 #ifdef HAVE_WL_CURSOR_SHAPE
         if (ctx.cursor_shape_manager != NULL) {
@@ -105,6 +117,10 @@ static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer,
 
 static void pointer_handle_leave(void *data, struct wl_pointer *wl_pointer,
                 uint32_t serial, struct wl_surface *surface) {
+        if (settings.pause_on_mouse_over) {
+                dunst_status(S_MOUSE_OVER, false);
+                wake_up();
+        }
 }
 
 static void pointer_handle_axis(void *data, struct wl_pointer *wl_pointer,
