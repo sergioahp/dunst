@@ -34,6 +34,13 @@ jobs:
           upstream_sync_branch: master
           test_mode: ${{ inputs.sync_test_mode }}
 
+      - name: Sync upstream tags
+        if: inputs.sync_test_mode != true
+        run: |
+          git remote add upstream https://github.com/dunst-project/dunst.git
+          git fetch upstream --tags
+          git push origin --tags
+
   merge_into_feature:
     runs-on: ubuntu-latest
     name: Merge master into feature branch
