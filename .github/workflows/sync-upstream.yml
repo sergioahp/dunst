@@ -30,8 +30,11 @@ jobs:
           upstream_sync_branch: master
 
       - name: Sync upstream tags
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |
           git remote set-url upstream https://github.com/dunst-project/dunst.git 2>/dev/null || git remote add upstream https://github.com/dunst-project/dunst.git
+          git remote set-url origin "https://${GITHUB_ACTOR}:${SYNC_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git fetch upstream --tags
           git push origin --tags
 
