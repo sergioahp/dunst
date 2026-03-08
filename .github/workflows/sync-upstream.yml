@@ -4,11 +4,6 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
   workflow_dispatch:
-    inputs:
-      sync_test_mode:
-        description: 'Test mode (dry run, no push)'
-        type: boolean
-        default: false
 
 jobs:
   sync_master:
@@ -32,10 +27,8 @@ jobs:
           target_repo_token: ${{ secrets.GITHUB_TOKEN }}
           upstream_sync_repo: dunst-project/dunst
           upstream_sync_branch: master
-          test_mode: ${{ inputs.sync_test_mode }}
 
       - name: Sync upstream tags
-        if: inputs.sync_test_mode != true
         run: |
           git remote add upstream https://github.com/dunst-project/dunst.git
           git fetch upstream --tags
@@ -45,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Merge master into feature branch
     needs: sync_master
-    if: needs.sync_master.outputs.has_new_commits == 'true' && inputs.sync_test_mode != true
+    if: needs.sync_master.outputs.has_new_commits == 'true'
 
     steps:
       - name: Checkout feature branch
