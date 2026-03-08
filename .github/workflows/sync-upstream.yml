@@ -58,7 +58,7 @@ jobs:
 
       - name: Merge master into feature branch
         id: merge
-        run: git merge origin/master --no-edit -m "chore: merge upstream sync into feature branch"
+        run: "git merge origin/master --no-edit -m 'chore: merge upstream sync into feature branch'"
         continue-on-error: true
 
       - name: Push if merge succeeded
