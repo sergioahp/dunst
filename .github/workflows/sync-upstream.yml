@@ -18,6 +18,7 @@ jobs:
         with:
           ref: master
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Sync upstream changes into master
         id: sync
