@@ -31,7 +31,7 @@ jobs:
 
       - name: Sync upstream tags
         run: |
-          git remote add upstream https://github.com/dunst-project/dunst.git
+          git remote set-url upstream https://github.com/dunst-project/dunst.git 2>/dev/null || git remote add upstream https://github.com/dunst-project/dunst.git
           git fetch upstream --tags
           git push origin --tags
 
