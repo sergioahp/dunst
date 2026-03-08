@@ -24,7 +24,7 @@ jobs:
         uses: sergioahp/Fork-Sync-With-Upstream-action@v3.4.1
         with:
           target_sync_branch: master
-          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          target_repo_token: ${{ secrets.SYNC_TOKEN }}
           upstream_sync_repo: dunst-project/dunst
           upstream_sync_branch: master
 
