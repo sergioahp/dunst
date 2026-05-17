@@ -53,7 +53,8 @@ $(error You have to compile at least one output (X11, Wayland))
 endif
 endif
 
-OBJ := ${SRC:.c=.o}
+DUNST_OBJ := ${SRC:.c=.o}
+COMMON_OBJ := $(filter-out src/main.o,${DUNST_OBJ})
 TEST_SRC := $(sort $(shell ${FIND} test/ -name '*.c'))
 TEST_OBJ := $(TEST_SRC:.c=.o)
 DEPS := ${SRC:.c=.d} ${TEST_SRC:.c=.d}
@@ -69,7 +70,7 @@ debug: all
 
 -include $(DEPS)
 
-${OBJ} ${TEST_OBJ}: Makefile config.mk
+${DUNST_OBJ} ${TEST_OBJ}: Makefile config.mk
 
 DATE_FMT = +%Y-%m-%d
 ifdef SOURCE_DATE_EPOCH
@@ -84,8 +85,8 @@ src/dunst.o: src/dunst.c
 %.o: %.c
 	${CC} -o $@ -c $< ${CPPFLAGS} ${CFLAGS}
 
-dunst: ${OBJ} main.o
-	${CC} -o ${@} ${OBJ} main.o ${CFLAGS} ${LDFLAGS}
+dunst: ${DUNST_OBJ}
+	${CC} -o ${@} ${DUNST_OBJ} ${CFLAGS} ${LDFLAGS}
 
 ifneq (0,${DUNSTIFY})
 all: dunstify
@@ -97,7 +98,7 @@ endif
 test: test/test clean-coverage-run
 	# Make sure an error code is returned when the test fails
 	/usr/bin/env bash -c 'set -euo pipefail;\
-	TESTDIR=./test ./test/test -v | ./test/greenest.awk '
+	TESTDIR=./test ./test/test -v | ${AWK} -f ./test/greenest.awk '
 
 test-valgrind: test/test
 	TESTDIR=./test ${VALGRIND} \
@@ -124,8 +125,8 @@ test-coverage-report: test-coverage
 test/%.o: test/%.c src/%.c
 	${CC} -o $@ -c $< ${CFLAGS} ${CPPFLAGS}
 
-test/test: ${OBJ} ${TEST_OBJ}
-	${CC} -o ${@} ${TEST_OBJ} $(filter-out ${TEST_OBJ:test/%=src/%},${OBJ}) ${CFLAGS} ${LDFLAGS}
+test/test: ${COMMON_OBJ} ${TEST_OBJ}
+	${CC} -o ${@} ${TEST_OBJ} $(filter-out ${TEST_OBJ:test/%=src/%},${COMMON_OBJ}) ${CFLAGS} ${LDFLAGS}
 
 functional-tests: dunst dunstify
 	PREFIX=. ./test/functional-tests/test.sh
@@ -189,7 +190,7 @@ endif
 clean: clean-dunst clean-dunstify clean-doc clean-tests clean-coverage clean-coverage-run
 
 clean-dunst:
-	rm -f dunst ${OBJ} main.o main.d ${DEPS}
+	rm -f dunst ${DUNST_OBJ} ${DEPS}
 	rm -f org.knopwob.dunst.service
 	rm -f dunst.systemd.service
 
@@ -229,51 +230,51 @@ clean-wayland-protocols:
 install: install-dunst install-dunstctl install-dunstrc install-service
 
 install-dunst: dunst doc
-	install -Dm755 dunst ${DESTDIR}${BINDIR}/dunst
-	install -Dm644 docs/dunst.1 ${DESTDIR}${MANPREFIX}/man1/dunst.1
-	install -Dm644 docs/dunst.5 ${DESTDIR}${MANPREFIX}/man5/dunst.5
-	install -Dm644 docs/dunstctl.1 ${DESTDIR}${MANPREFIX}/man1/dunstctl.1
-	install -Dm644 docs/dunstify.1 ${DESTDIR}${MANPREFIX}/man1/dunstify.1
+	${INSTALL} -Dm755 dunst ${DESTDIR}${BINDIR}/dunst
+	${INSTALL} -Dm644 docs/dunst.1 ${DESTDIR}${MANPREFIX}/man1/dunst.1
+	${INSTALL} -Dm644 docs/dunst.5 ${DESTDIR}${MANPREFIX}/man5/dunst.5
+	${INSTALL} -Dm644 docs/dunstctl.1 ${DESTDIR}${MANPREFIX}/man1/dunstctl.1
+	${INSTALL} -Dm644 docs/dunstify.1 ${DESTDIR}${MANPREFIX}/man1/dunstify.1
 
 install-dunstctl: dunstctl
-	install -Dm755 dunstctl ${DESTDIR}${BINDIR}/dunstctl
+	${INSTALL} -Dm755 dunstctl ${DESTDIR}${BINDIR}/dunstctl
 
 ifeq (1,${SYSCONF_FORCE_NEW})
 install-dunstrc:
-	install -Dm644 dunstrc ${DESTDIR}${SYSCONFFILE}
+	${INSTALL} -Dm644 dunstrc ${DESTDIR}${SYSCONFFILE}
 endif
 
 install-service: install-service-dbus
 install-service-dbus: service-dbus
-	install -Dm644 org.knopwob.dunst.service ${DESTDIR}${SERVICEDIR_DBUS}/org.knopwob.dunst.service
+	${INSTALL} -Dm644 org.knopwob.dunst.service ${DESTDIR}${SERVICEDIR_DBUS}/org.knopwob.dunst.service
 ifneq (0,${SYSTEMD})
 install-service: install-service-systemd
 install-service-systemd: service-systemd
-	install -Dm644 dunst.systemd.service ${DESTDIR}${SERVICEDIR_SYSTEMD}/dunst.service
+	${INSTALL} -Dm644 dunst.systemd.service ${DESTDIR}${SERVICEDIR_SYSTEMD}/dunst.service
 endif
 
 ifneq (0,${DUNSTIFY})
 install: install-dunstify
 install-dunstify: dunstify
-	install -Dm755 dunstify ${DESTDIR}${BINDIR}/dunstify
+	${INSTALL} -Dm755 dunstify ${DESTDIR}${BINDIR}/dunstify
 endif
 
 ifneq (0,${COMPLETIONS})
 install: install-completions
 install-completions:
-	install -Dm644 completions/dunst.bashcomp ${DESTDIR}${BASHCOMPLETIONDIR}/dunst
-	install -Dm644 completions/dunstctl.bashcomp ${DESTDIR}${BASHCOMPLETIONDIR}/dunstctl
-	install -Dm644 completions/_dunst.zshcomp ${DESTDIR}${ZSHCOMPLETIONDIR}/_dunst
-	install -Dm644 completions/_dunstctl.zshcomp ${DESTDIR}${ZSHCOMPLETIONDIR}/_dunstctl
-	install -Dm644 completions/dunst.fishcomp ${DESTDIR}${FISHCOMPLETIONDIR}/dunst.fish
-	install -Dm644 completions/dunstctl.fishcomp ${DESTDIR}${FISHCOMPLETIONDIR}/dunstctl.fish
+	${INSTALL} -Dm644 completions/dunst.bashcomp ${DESTDIR}${BASHCOMPLETIONDIR}/dunst
+	${INSTALL} -Dm644 completions/dunstctl.bashcomp ${DESTDIR}${BASHCOMPLETIONDIR}/dunstctl
+	${INSTALL} -Dm644 completions/_dunst.zshcomp ${DESTDIR}${ZSHCOMPLETIONDIR}/_dunst
+	${INSTALL} -Dm644 completions/_dunstctl.zshcomp ${DESTDIR}${ZSHCOMPLETIONDIR}/_dunstctl
+	${INSTALL} -Dm644 completions/dunst.fishcomp ${DESTDIR}${FISHCOMPLETIONDIR}/dunst.fish
+	${INSTALL} -Dm644 completions/dunstctl.fishcomp ${DESTDIR}${FISHCOMPLETIONDIR}/dunstctl.fish
 
 ifneq (0,${DUNSTIFY})
 install: install-completions-dunstify
 install-completions-dunstify:
-	install -Dm644 completions/dunstify.bashcomp ${DESTDIR}${BASHCOMPLETIONDIR}/dunstify
-	install -Dm644 completions/_dunstify.zshcomp ${DESTDIR}${ZSHCOMPLETIONDIR}/_dunstify
-	install -Dm644 completions/dunstify.fishcomp ${DESTDIR}${FISHCOMPLETIONDIR}/dunstify.fish
+	${INSTALL} -Dm644 completions/dunstify.bashcomp ${DESTDIR}${BASHCOMPLETIONDIR}/dunstify
+	${INSTALL} -Dm644 completions/_dunstify.zshcomp ${DESTDIR}${ZSHCOMPLETIONDIR}/_dunstify
+	${INSTALL} -Dm644 completions/dunstify.fishcomp ${DESTDIR}${FISHCOMPLETIONDIR}/dunstify.fish
 endif
 endif
 
@@ -289,7 +290,7 @@ uninstall-keepconf: uninstall-service uninstall-dunstctl uninstall-completions
 
 uninstall-dunstrc:
 	rm -f ${DESTDIR}${SYSCONFFILE}
-	rmdir --ignore-fail-on-non-empty ${DESTDIR}${SYSCONFDIR}/dunst
+	${RMDIR} --ignore-fail-on-non-empty ${DESTDIR}${SYSCONFDIR}/dunst
 
 uninstall-dunstctl:
 	rm -f ${DESTDIR}${BINDIR}/dunstctl

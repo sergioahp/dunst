@@ -1,4 +1,11 @@
-/* copyright 2013 Sascha Kruse and contributors (see LICENSE for licensing information) */
+/* SPDX-License-Identifier: BSD-3-Clause */
+/**
+ * @file
+ * @copyright Copyright 2013-2014 Sascha Kruse
+ * @copyright Copyright 2014-2026 Dunst contributors
+ * @license BSD-3-Clause
+ */
+
 #include "x.h"
 
 #include <assert.h>
@@ -12,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #include <X11/extensions/shape.h>
 #include <X11/Xatom.h>
 #include <X11/X.h>
@@ -39,8 +47,6 @@
 #include "../settings.h"
 #include "../utils.h"
 #include "../input.h"
-
-#include "screen.h"
 
 #define WIDTH 400
 #define HEIGHT 400
@@ -899,7 +905,7 @@ static void x_shortcut_init(struct keyboard_shortcut *ks)
 {
         ASSERT_OR_RET(ks && ks->str,);
 
-        if (STR_EQ(ks->str, "none") || (STR_EQ(ks->str, ""))) {
+        if (STR_EMPTY(ks->str) || STR_EQ(ks->str, "none")) {
                 ks->is_valid = false;
                 return;
         }

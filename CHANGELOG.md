@@ -1,5 +1,39 @@
 # Dunst changelog
 
+## 1.13.2 -- 2026-03-18
+
+### Added
+- Add *experimental* support for PCRE regex (see manual) (#1536)
+- Add fullscreen `suppress` mode (#1539, #1187)
+- Add dunstify shorthand for stack-tags (--stack-tag) (#1540)
+
+### Changed
+- Improve doxygen docs (#1538)
+- Make the build more generic and improve support for FreeBSD (#1537)
+
+### Fixed
+- Run script for duplicate notifications (#1542, #1115)
+- Add NULL check in wayland toplevel events
+- Fix markup newline parsing (#1054)
+- Restore dunstify `-a` and update docs
+
+## 1.13.1 -- 2026-01-23
+
+### Added
+- Added basic zsh and bash completions for notify-send (#1510)
+- Install shell completions in the meson build (#1511)
+- Connect `dunstctl reload` to systemctl service reloading (#1515)
+- Add an option to pause timeout while the notification is being hovered (#1534)
+
+### Changed
+- Rename dunstify options similarly to notify-send (old names are now aliases) (#1510)
+- Improve warning for invalid numbers in dunstctl (#1524)
+- Add systemd ordering after graphical-session.target (#1527 )
+
+### Fixed
+- Ensure PropertiesChanged signal is sent when handling SIGUSR (#1505, #832)
+- Fix the icon transfer logic (regression from 1.13.0) (#1521, #1532, #1471)
+
 ## 1.13.0 -- 2025-08-04
 
 ### Added

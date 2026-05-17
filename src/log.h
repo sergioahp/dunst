@@ -1,4 +1,12 @@
-/* copyright 2013 Sascha Kruse and contributors (see LICENSE for licensing information) */
+/* SPDX-License-Identifier: BSD-3-Clause */
+/**
+ * @file
+ * @ingroup utils
+ * @brief Logging subsystem and helpers
+ * @copyright Copyright 2013-2014 Sascha Kruse
+ * @copyright Copyright 2014-2026 Dunst contributors
+ * @license BSD-3-Clause
+ */
 
 #include <errno.h>
 #include <glib.h>
@@ -19,7 +27,7 @@
  * This requires -Wno-gnu-zero-variadic-macro-arguments with clang
  * because of token pasting ',' and %__VA_ARGS__ being a GNU extension.
  * However, the result is the same with both gcc and clang and since we are
- * compiling with '-std=gnu99', this should be fine.
+ * compiling with '-std=gnu11', this should be fine.
  */
 #if __GNUC__ >= 8 || __clang_major__ >= 6
 #define MSG(format, ...) "[%16s:%04d] " format, __func__, __LINE__, ## __VA_ARGS__
@@ -42,7 +50,7 @@
 
 #define DIE(...) do { LOG_C(__VA_ARGS__); exit(EXIT_FAILURE); } while (0)
 
-// unified fopen() result messages
+// Unified fopen() result messages
 #define MSG_FOPEN_SUCCESS(path, fp) "Opened '%s' (fd: '%d')", path, fileno(fp)
 #define MSG_FOPEN_FAILURE(path) "Cannot open '%s': %s", path, strerror(errno)
 
@@ -53,12 +61,14 @@ enum log_mask {
 };
 
 /**
+ * Get the current global loglevel
+ */
+GLogLevelFlags log_get_level(void);
+
+/**
  * Set the current loglevel to `level`
  *
  * @param level The desired log level
- *
- * If `level` is `NULL`, nothing will be done.
- * If `level` is an invalid value, nothing will be done.
  */
 void log_set_level(GLogLevelFlags level);
 

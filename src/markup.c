@@ -1,6 +1,10 @@
-/* copyright 2013 Sascha Kruse and contributors (see LICENSE for licensing information) */
-
-#include "markup.h"
+/* SPDX-License-Identifier: BSD-3-Clause */
+/**
+ * @file
+ * @copyright Copyright 2013-2014 Sascha Kruse
+ * @copyright Copyright 2014-2026 Dunst contributors
+ * @license BSD-3-Clause
+ */
 
 #include <assert.h>
 #include <ctype.h>
@@ -8,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "markup.h"
 #include "log.h"
 #include "settings.h"
 #include "utils.h"
@@ -60,7 +65,6 @@ static char *markup_br2nl(char *str)
         return str;
 }
 
-/* see markup.h */
 void markup_strip_a(char **str, char **urls)
 {
         assert(*str);
@@ -77,15 +81,13 @@ void markup_strip_a(char **str, char **urls)
 
                 // the tag is broken, ignore it
                 if (!tag1_end) {
-                        LOG_W("Given link is broken: '%s'",
-                              tag1);
+                        LOG_W("Given link is broken: '%s'", tag1);
                         string_replace_at(*str, tag1-*str, strlen(tag1), "");
                         break;
                 }
                 if (tag2 && tag2 < tag1_end) {
                         int repl_len =  (tag2 - tag1) + strlen("</a>");
-                        LOG_W("Given link is broken: '%.*s.'",
-                              repl_len, tag1);
+                        LOG_W("Given link is broken: '%.*s.'", repl_len, tag1);
                         string_replace_at(*str, tag1-*str, repl_len, "");
                         break;
                 }
@@ -98,7 +100,6 @@ void markup_strip_a(char **str, char **urls)
                         href = href+6;
 
                         const char *quote = strstr(href, "\"");
-
                         if (quote && quote < tag1_end) {
                                 plain_url = g_strndup(href, quote-href);
                         }
@@ -124,6 +125,9 @@ void markup_strip_a(char **str, char **urls)
                         text = string_replace_all("]", "", text);
                         text = string_replace_all("[", "", text);
 
+                        // Prevent dmenu from splitting items
+                        text = string_replace_all("\n", "\\n", text);
+
                         char *url = g_strdup_printf("[%s] %s", text, plain_url);
 
                         *urls = string_append(*urls, url, "\n");
@@ -135,7 +139,6 @@ void markup_strip_a(char **str, char **urls)
         }
 }
 
-/* see markup.h */
 void markup_strip_img(char **str, char **urls)
 {
         const char *start;
@@ -157,18 +160,18 @@ void markup_strip_img(char **str, char **urls)
                 const char *alt_s = strstr(start, "alt=\"");
                 const char *src_s = strstr(start, "src=\"");
 
-                char *text_alt = NULL;
-                char *text_src = NULL;
-
+                char *text_alt = NULL, *text_src = NULL;
                 const char *src_e = NULL, *alt_e = NULL;
-                if (alt_s)
-                        alt_e = strstr(alt_s + strlen("alt=\""), "\"");
-                if (src_s)
-                        src_e = strstr(src_s + strlen("src=\""), "\"");
 
-                // Move pointer to the actual start
-                alt_s = alt_s ? alt_s + strlen("alt=\"") : NULL;
-                src_s = src_s ? src_s + strlen("src=\"") : NULL;
+                // Move pointer to the actual start and get end
+                if (alt_s) {
+                        alt_s += strlen("alt=\"");
+                        alt_e = strstr(alt_s, "\"");
+                }
+                if (src_s) {
+                        src_s += strlen("src=\"");
+                        src_e = strstr(src_s, "\"");
+                }
 
                 /* check if alt and src attribute are given
                  * If both given, check the alignment of all pointers */
@@ -207,6 +210,9 @@ void markup_strip_img(char **str, char **urls)
                         text_alt = string_replace_all("]", "", text_alt);
                         text_alt = string_replace_all("[", "", text_alt);
 
+                        // Prevent dmenu from splitting items
+                        text_alt = string_replace_all("\n", "\\n", text_alt);
+
                         char *url = g_strdup_printf("[%s] %s", text_alt, text_src);
 
                         *urls = string_append(*urls, url, "\n");
@@ -218,7 +224,6 @@ void markup_strip_img(char **str, char **urls)
         }
 }
 
-/* see markup.h */
 char *markup_strip(char *str)
 {
         ASSERT_OR_RET(str, NULL);
@@ -233,11 +238,11 @@ char *markup_strip(char *str)
 }
 
 /**
- * Determine if an & character pointed to by \p str is a markup & entity or
+ * Determine if an & character pointed to by @p str is a markup & entity or
  * part of the text
  *
- * @retval true: \p str is an entity
- * @retval false: It's no valid entity
+ * @retval true if @p str is an entity
+ * @retval false otherwise
  */
 static bool markup_is_entity(const char *str)
 {
@@ -305,7 +310,6 @@ static char *markup_escape_unsupported(char *str)
         return str;
 }
 
-/* see markup.h */
 char *markup_transform(char *str, enum markup_mode markup_mode)
 {
         ASSERT_OR_RET(str, NULL);

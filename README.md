@@ -1,4 +1,11 @@
-[![main](https://github.com/dunst-project/dunst/workflows/main/badge.svg)](https://github.com/dunst-project/dunst/actions?query=workflow%3Amain) [![codecov](https://codecov.io/gh/dunst-project/dunst/branch/master/graph/badge.svg)](https://codecov.io/gh/dunst-project/dunst)
+[![main][main-badge]][main-link] [![extra][extra-badge]][extra-link] [![codecov][codecov-badge]][codecov-link]
+
+[main-badge]: https://github.com/dunst-project/dunst/actions/workflows/main.yml/badge.svg?branch=master
+[main-link]: https://github.com/dunst-project/dunst/actions?query=workflow%3Amain
+[extra-badge]: https://github.com/dunst-project/dunst/actions/workflows/extra.yml/badge.svg?event=push&branch=master
+[extra-link]: https://github.com/dunst-project/dunst/actions?query=workflow%3Aextra
+[codecov-badge]: https://codecov.io/gh/dunst-project/dunst/branch/master/graph/badge.svg
+[codecov-link]: https://codecov.io/gh/dunst-project/dunst
 
 # Dunst
 
@@ -175,18 +182,10 @@ you do want it removed as well.
 ## Contributing
 
 Contributions are very welcome. Before contributing, make sure to look at the
-contribution documentation in [HACKING.md](./HACKING.md).
+contribution documentation in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 Make sure you test your code and where possible add automated tests. These
 tests are also checked on memory leaks (with `make test-valgrind`).
-
-## Troubleshooting
-
-### Cannot set settings via command line
-
-This functionality was removed during the refactor. It might be re-added later
-in some form. See [#940](https://github.com/dunst-project/dunst/issues/940) for
-details.
 
 ## Bug reports
 
@@ -206,7 +205,7 @@ Please use the [issue tracker][issue-tracker] provided by GitHub to send us bug 
 
 - [Friso Smit](https://github.com/fwsmit) <fw.smit01@gmail.com>
 - [Bjoern Hiller](https://github.com/zappolowski) <bjoern.hiller@gmail.com>
-- [Federico Angelilli](https://github.com/fedang) <fedeangemail@gmail.com>
+- [Federico Angelilli](https://github.com/fedang) <code@fedang.net>
 
 Please only refer to active maintainers for issues and bugs.
 

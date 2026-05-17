@@ -1,4 +1,9 @@
-#include "draw.h"
+/* SPDX-License-Identifier: BSD-3-Clause */
+/**
+ * @file
+ * @copyright Copyright 2018-2026 Dunst contributors
+ * @license BSD-3-Clause
+ */
 
 #include <assert.h>
 #include <math.h>
@@ -11,6 +16,7 @@
 #include <inttypes.h>
 #include <glib.h>
 
+#include "draw.h"
 #include "dunst.h"
 #include "icon.h"
 #include "log.h"
@@ -352,7 +358,7 @@ static struct dimensions calculate_dimensions(GSList *layouts)
 
         /* clamp max width to screen width */
         const struct screen_info *scr = output->get_active_screen();
-        int max_width = scr->w - settings.offset.x;
+        int max_width = round(scr->w / scale) - settings.offset.x;
         if (dim.w > max_width) {
                 dim.w = max_width;
         }
@@ -964,7 +970,7 @@ static struct dimensions layout_render(cairo_surface_t *srf,
 
 /**
  * Calculates the position the window should be placed at given its width and
- * height and stores them in \p ret_x and \p ret_y.
+ * height and stores them in @p ret_x and @p ret_y.
  */
 void calc_window_pos(const struct screen_info *scr, int width, int height, int *ret_x, int *ret_y)
 {
