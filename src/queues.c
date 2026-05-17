@@ -390,8 +390,14 @@ void queues_notification_close_id(gint id, enum reason reason)
                         notification_handle_close(target, reason, now);
 
                 //Don't notify clients if notification was pulled from history
-                if (!target->redisplayed && !delay_close)
+                if (!target->redisplayed && !delay_close) {
                         signal_notification_closed(target, reason);
+                        // notification_handle_close() sets close_signal_pending whenever it
+                        // arms the action_history_timeout grace period. Since we just emitted
+                        // the close signal, clear the flag so notification_emit_close_if_pending()
+                        // from the action-expiry path doesn't fire a duplicate signal.
+                        target->close_signal_pending = false;
+                }
                 queues_history_push(target);
         }
 }
