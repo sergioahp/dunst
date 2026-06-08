@@ -76,7 +76,7 @@ your notification history.
 # Documentation
 
 Most documentation can be found in dunst's man pages. In
-[**dunst(1)**](docs/dunst.1.pod) contains some general instructions on how
+[**dunst(1)**](docs/dunst.1.pod.in) contains some general instructions on how
 to run dunst and in
 [**dunst(5)**](docs/dunst.5.pod) all of dunst's configuration options are
 explained.
