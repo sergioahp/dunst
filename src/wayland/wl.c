@@ -159,6 +159,25 @@ static void xdg_toplevel_handle_close(void *data,
         surface_handle_closed();
 }
 
+void wl_teardown_surface(void) {
+        if (ctx.layer_surface)
+                zwlr_layer_surface_v1_destroy(ctx.layer_surface);
+        ctx.layer_surface = NULL;
+
+        if (ctx.xdg_toplevel)
+                xdg_toplevel_destroy(ctx.xdg_toplevel);
+        ctx.xdg_toplevel = NULL;
+
+        if (ctx.xdg_surface)
+                xdg_surface_destroy(ctx.xdg_surface);
+        ctx.xdg_surface = NULL;
+
+        ctx.layer_surface_output = NULL;
+        ctx.surface_output = NULL;
+
+        surface_handle_closed();
+}
+
 static void xdg_wm_base_handle_ping(void *data,
                 struct xdg_wm_base *xdg_wm_base,
                 uint32_t serial) {
@@ -503,9 +522,16 @@ static void send_frame(void) {
         int height = ctx.cur_dim.h;
         int width = ctx.cur_dim.w;
 
-        // There are two cases where we want to tear down the surface: zero
-        // notifications (height = 0) or moving between outputs.
-        if (height == 0 || ctx.layer_surface_output != output) {
+        // There are three cases where we want to tear down the surface: zero
+        // notifications (height = 0), moving between outputs, or no buffer
+        // because the last draw couldn't get one.
+        if (height == 0 || ctx.layer_surface_output != output ||
+                        ctx.current_buffer == NULL) {
+                // Don't wait for a frame on a surface we're about to destroy
+                if (ctx.frame_callback != NULL) {
+                        wl_callback_destroy(ctx.frame_callback);
+                        ctx.frame_callback = NULL;
+                }
                 if (ctx.layer_surface != NULL) {
                         zwlr_layer_surface_v1_destroy(ctx.layer_surface);
                         ctx.layer_surface = NULL;
@@ -540,9 +566,9 @@ static void send_frame(void) {
                 }
         }
 
-        // If there are no notifications, there's no point in recreating the
-        // surface right now.
-        if (height == 0) {
+        // If there are no notifications, or the last draw got no buffer,
+        // there's no point in recreating the surface right now.
+        if (height == 0 || ctx.current_buffer == NULL) {
                 ctx.dirty = false;
                 return;
         }
